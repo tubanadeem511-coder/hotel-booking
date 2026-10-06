@@ -1,0 +1,11 @@
+create table users(id uuid primary key references auth.users on delete cascade,name text,email text,phone text,country text,role text default 'user',created_at timestamptz default now());
+create table hotels(id serial primary key,name text,location text,city text,country text,description text,star_rating int,guest_rating numeric,review_count int,price_per_night int,discount int default 0,image text,property_type text,created_at timestamptz default now());
+create table rooms(id serial primary key,hotel_id int references hotels on delete cascade,name text,description text,capacity int,beds text,size int,price int,available_rooms int);
+create table bookings(id text primary key,user_id uuid references users,hotel_id int references hotels,room_id int,check_in date,check_out date,adults int,children int,rooms int,total_price int,booking_status text default 'Confirmed',payment_status text,created_at timestamptz default now());
+create table favorites(id serial primary key,user_id uuid references users,hotel_id int references hotels,created_at timestamptz default now(),unique(user_id,hotel_id));
+alter table users enable row level security;alter table bookings enable row level security;alter table favorites enable row level security;alter table hotels enable row level security;alter table rooms enable row level security;
+create policy "own profile" on users for all using(auth.uid()=id);
+create policy "own bookings" on bookings for all using(auth.uid()=user_id);
+create policy "own favs" on favorites for all using(auth.uid()=user_id);
+create policy "public hotels" on hotels for select using(true);
+create policy "public rooms" on rooms for select using(true);
